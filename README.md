@@ -95,6 +95,19 @@ src/
     └── relay_room.js      # Durable Object: manages client connections and message forwarding
 ```
 
+## 六个实现的对比
+
+| | Cloudflare Workers | Python（aiohttp） | Python（stdlib） | Python（websockets） | Node.js（自托管） | C（libwebsockets） | Rust（axum） |
+|---|---|---|---|---|---|---|---|
+| 项目目录 | `weron-signaler-cf/` | `weron-signaler-python/relay.py` | `weron-signaler-python/relay_std.py` | `weron-signaler-python/relay_ws.py` | `weron-signaler-nodejs/` | `weron-signaler-c/` | `weron-signaler-rust/` |
+| 运行时 | Cloudflare 平台 | Python + aiohttp | Python >= 3.10 stdlib | Python + websockets | Node.js >= 16 | 零依赖（静态二进制） | Rust std + tokio |
+| 部署 | `wrangler deploy` | `pip install aiohttp` | 直接运行脚本 | `pip install websockets` | `npm install && npm start` 或 `node app_std.js` | 直接运行二进制 | `cargo build --release` |
+| 内存 | — | ~15MB | ~5MB | ~8MB | ~30MB / ~15MB(stdlib) | ~2MB | ~5MB |
+| 并发 | Durable Objects | asyncio 单线程 | asyncio 单线程 | asyncio 单线程 | 单线程事件循环 | libwebsockets 多线程 | tokio 异步多线程 |
+| TLS | 原生 HTTPS | 需反向代理 | 需反向代理 | 需反向代理 | 需反向代理 | 编译时可选 OpenSSL | 需反向代理 |
+| 分片重组 | 不支持 | 不支持 | 不支持 | 不支持 | ✅ 支持(app_std.js) | ✅ 原生支持 | 不支持 |
+| 第三方依赖 | wrangler CLI | `aiohttp` | 零 | `websockets>=14` | `ws` 或 零 | 零 | tokio + axum + tungstenite |
+
 ## Key Design Decisions
 
 ### BinaryMessage over TextMessage
